@@ -34,73 +34,101 @@ class _CalculatorViewState extends State<CalculatorView> {
   int first = 0;
   int second = 0;
   String operation = "";
+  List<String> history = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calculator'),
+        title: const Text('Ujjwols Calculator'),
         backgroundColor: Colors.blueGrey,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            // Display Area
-            Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              color: Colors.white,
-              child: Text(
-                _textController.text,
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          // Display Area
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // History
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    reverse: true,
+                    itemCount: history.length,
+                    itemBuilder: (context, index) {
+                      return Text(
+                        history[index],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+                // Current Input
+                Text(
+                  _textController.text.isEmpty ? "0" : _textController.text,
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            // Grid of Buttons
-            Expanded(
+          ),
+          const SizedBox(height: 10),
+          // Buttons Area
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueGrey, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
-                  crossAxisSpacing: 10.0,
-                  mainAxisSpacing: 10.0,
+                  crossAxisSpacing: 12.0,
+                  mainAxisSpacing: 12.0,
                 ),
                 itemCount: lstSymbols.length,
+                padding: const EdgeInsets.all(12),
                 itemBuilder: (context, index) {
+                  final symbol = lstSymbols[index];
                   return ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: lstSymbols[index] == "="
-                          ? Colors.blueGrey
-                          : Colors.grey[300],
-                      foregroundColor: Colors.black,
+                      backgroundColor:
+                          symbol == "=" ? Colors.blueGrey : Colors.white,
+                      foregroundColor:
+                          symbol == "=" ? Colors.white : Colors.black87,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 2,
                     ),
                     onPressed: () {
-                      final symbol = lstSymbols[index];
                       setState(() {
                         if (symbol == "C") {
                           _textController.text = "";
                           first = 0;
                           second = 0;
                           operation = "";
+                          history.clear();
                         } else if (symbol == "←") {
                           if (_textController.text.isNotEmpty) {
                             _textController.text = _textController.text
                                 .substring(0, _textController.text.length - 1);
                           }
-                        } else if (symbol == "+" ||
-                            symbol == "-" ||
-                            symbol == "*" ||
-                            symbol == "/" ||
-                            symbol == "%") {
+                        } else if (["+", "-", "*", "/", "%"].contains(symbol)) {
                           first = int.tryParse(_textController.text) ?? 0;
                           operation = symbol;
                           _textController.text = "";
@@ -118,9 +146,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                               result = first * second;
                               break;
                             case "/":
-                              result = second != 0
-                                  ? first ~/ second
-                                  : 0; // Avoid division by zero
+                              result = second != 0 ? first ~/ second : 0;
                               break;
                             case "%":
                               result = first % second;
@@ -128,6 +154,9 @@ class _CalculatorViewState extends State<CalculatorView> {
                             default:
                               result = 0;
                           }
+                          final calculation =
+                              "$first $operation $second = $result";
+                          history.insert(0, calculation);
                           _textController.text = result.toString();
                         } else {
                           _textController.text += symbol;
@@ -135,21 +164,19 @@ class _CalculatorViewState extends State<CalculatorView> {
                       });
                     },
                     child: Text(
-                      lstSymbols[index],
+                      symbol,
                       style: TextStyle(
                         fontSize: 24,
-                        color: lstSymbols[index] == "="
-                            ? Colors.white
-                            : Colors.black,
                         fontWeight: FontWeight.bold,
+                        color: symbol == "=" ? Colors.white : Colors.black87,
                       ),
                     ),
                   );
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
